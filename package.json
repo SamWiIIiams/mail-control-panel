@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "tailwind:build": "tailwindcss -i ./app/globals.css -o ./app/tailwind-output.css --content './app/**/*.{ts,tsx}'",
     "lint": "eslint"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
     "typescript": "^5"
   }
 }

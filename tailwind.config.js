@@ -1,7 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: "class", // toggle dark mode via .dark class
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+  ],
+  darkMode: "class", // Required for manual toggle
   theme: {
     extend: {},
   },
