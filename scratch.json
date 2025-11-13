@@ -1,0 +1,36 @@
+{
+  "data": {
+    "object": "template",
+    "id": "7ad2ef65-24e2-4fb3-8add-894b00ff318a",
+    "current_version_id": "bc88d8ff-b3a8-4819-9539-1647f659c16b",
+    "alias": "maintenance-alert",
+    "name": "Maintenance Alert ",
+    "created_at": "2025-11-09 17:58:03.065193+00",
+    "updated_at": "2025-11-10 06:22:51.043+00",
+    "status": "published",
+    "published_at": "2025-11-10 06:22:51.027+00",
+    "from": "Sam <sam@jinjnet.com>",
+    "subject": "Jinjnet Maintenance Alert ",
+    "reply_to": [],
+    "html": "<h1>Hello, world!</h1>",
+    "text": "{{preheader}}\n\n{{site_name}} Alert\n\n\n{{HEADLINE}}\n\n{{message_body}}\n\n{{#if cta_url}}\n\n{{cta_label}} {{cta_url}}\n\n{{/if}}\n\nIf you have any questions, reply to this email or contact us at {{support_email}}.\n\nYou’re receiving this email because you have an account with {{site_name}}.\n\nUnsubscribe {{unsubscribe_url}}\n\n\n",
+    "variables": [],
+    "has_unpublished_versions": false
+  },
+  "error": null,
+  "headers": {
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "99d9cf82ff33daac-EWR",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 12 Nov 2025 23:29:17 GMT",
+    "etag": "W/\"3187-lIlFL7S+7j58m7dgJm2EMTZ1nXE\"",
+    "ratelimit-limit": "2",
+    "ratelimit-policy": "2;w=1",
+    "ratelimit-remaining": "0",
+    "ratelimit-reset": "1",
+    "server": "cloudflare",
+    "transfer-encoding": "chunked"
+  }
+}
