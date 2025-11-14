@@ -31,15 +31,25 @@ type Segment = {
 export default function MessageStep({ templateId, onReset }: MessageStepProps) {
   const [template, setTemplate] = useState<Template | null>(null);
   const [segments, setSegments] = useState<Segment[]>([]);
-  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(
+    null
+  );
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
+  const [subject, setSubject] = useState(template?.subject || "");
 
   // Refs to prevent double fetching
   const fetchedTemplatesRef = useRef<string | null>(null);
   const fetchedSegmentsRef = useRef(false);
 
   // Fetch template by ID (only once per templateId)
+
+  useEffect(() => {
+    if (template?.subject) setSubject(template.subject);
+  }, [template?.subject]);
+
   useEffect(() => {
     if (fetchedTemplatesRef.current === templateId) return;
     fetchedTemplatesRef.current = templateId;
@@ -98,15 +108,22 @@ export default function MessageStep({ templateId, onReset }: MessageStepProps) {
     }
 
     try {
-      const res = await fetch("/api/broadcast", {
+      // Generate name at submit time
+      const easternDateTime = new Date().toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        hour12: false,
+      });
+      const name = `${subject} ${easternDateTime}`;
+      const res = await fetch("/api/broadcasts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           html: template?.html,
           variables: variableValues,
           segmentId: selectedSegmentId,
-          subject: template?.subject,
+          subject,
           from: template?.from,
+          name,
         }),
       });
 
@@ -125,6 +142,15 @@ export default function MessageStep({ templateId, onReset }: MessageStepProps) {
       alert("Failed to send email: " + (err as Error).message);
     }
   };
+
+  function applyVariables(html: string, vars: Record<string, string>) {
+    let output = html;
+    Object.entries(vars).forEach(([key, value]) => {
+      const re = new RegExp(`{{{\\s*${key}\\s*}}}`, "g");
+      output = output.replace(re, value);
+    });
+    return output;
+  }
 
   if (loading || !template) return <p>Loading template...</p>;
 
@@ -160,6 +186,18 @@ export default function MessageStep({ templateId, onReset }: MessageStepProps) {
           </select>
         </label>
 
+        {/* Subject field */}
+        <label>
+          Subject:
+          <input
+            type="text"
+            className="w-full p-2 rounded bg-gray-200 dark:bg-gray-800 text-black dark:text-white"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            required
+          />
+        </label>
+
         {/* Template variables */}
         {template.variables?.map((v) => (
           <label key={v.id}>
@@ -174,6 +212,17 @@ export default function MessageStep({ templateId, onReset }: MessageStepProps) {
             />
           </label>
         ))}
+
+        {/* Message preview */}
+        <div className="mt-6 max-w-3xl mx-auto">
+          <h3 className="font-semibold text-center mb-2">Preview</h3>
+          <div
+            className="p-4 rounded bg-gray-100 dark:bg-gray-900 text-black dark:text-white font-mono overflow-auto max-h-64"
+            dangerouslySetInnerHTML={{
+              __html: applyVariables(template.html, variableValues),
+            }}
+          />
+        </div>
 
         <button
           type="submit"

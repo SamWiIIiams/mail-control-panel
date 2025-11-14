@@ -26,7 +26,7 @@ export default function SignInPage() {
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <main className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-950 text-black dark:text-white">
       <div className="w-full max-w-md p-8 bg-gray-100 dark:bg-gray-900 text-black dark:text-white rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold mb-6 text-center">Sign In</h1>
 
