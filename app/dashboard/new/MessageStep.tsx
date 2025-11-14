@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Resend } from "resend";
 
 type MessageStepProps = {
   templateId: string;
-  onBack: () => void;
   onReset: () => void;
 };
 
@@ -20,6 +18,9 @@ type Template = {
   id: string;
   name: string;
   variables: TemplateVariable[];
+  html: string;
+  subject: string;
+  from: string;
 };
 
 type Segment = {
@@ -27,28 +28,33 @@ type Segment = {
   name: string;
 };
 
-export default function MessageStep({ templateId, onBack, onReset }: MessageStepProps) {
+export default function MessageStep({ templateId, onReset }: MessageStepProps) {
   const [template, setTemplate] = useState<Template | null>(null);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const fetchedSegmentsRef = useRef(false);
-  const fetchedTemplatesRef = useRef(false);
 
-  // Fetch template by ID
+  // Refs to prevent double fetching
+  const fetchedTemplatesRef = useRef<string | null>(null);
+  const fetchedSegmentsRef = useRef(false);
+
+  // Fetch template by ID (only once per templateId)
   useEffect(() => {
-    if (fetchedTemplatesRef.current) return;
-    fetchedTemplatesRef.current = true;
+    if (fetchedTemplatesRef.current === templateId) return;
+    fetchedTemplatesRef.current = templateId;
+
     async function fetchTemplate() {
       setLoading(true);
       try {
         const res = await fetch(`/api/templates/${templateId}`);
         const data = await res.json();
-        setTemplate(data.data);
+        const tmpl = data?.data || data;
+
+        setTemplate(tmpl);
 
         const initialVariables: Record<string, string> = {};
-        data.variables.forEach((v: TemplateVariable) => {
+        tmpl.variables?.forEach((v: TemplateVariable) => {
           initialVariables[v.key] = v.fallback_value || "";
         });
         setVariableValues(initialVariables);
@@ -62,23 +68,23 @@ export default function MessageStep({ templateId, onBack, onReset }: MessageStep
     fetchTemplate();
   }, [templateId]);
 
-  // Fetch segments
-useEffect(() => {
-  if (fetchedSegmentsRef.current) return; // prevent double-fetch
-  fetchedSegmentsRef.current = true;
+  // Fetch segments (only once)
+  useEffect(() => {
+    if (fetchedSegmentsRef.current) return;
+    fetchedSegmentsRef.current = true;
 
-  async function fetchSegments() {
-    try {
-      const res = await fetch("/api/segments");
-      const data = await res.json();
-      setSegments(data.data);
-    } catch (err) {
-      console.error("Error fetching segments:", err);
+    async function fetchSegments() {
+      try {
+        const res = await fetch("/api/segments");
+        const data = await res.json();
+        setSegments(data?.data || []);
+      } catch (err) {
+        console.error("Error fetching segments:", err);
+      }
     }
-  }
 
-  fetchSegments();
-}, []);
+    fetchSegments();
+  }, []);
 
   const handleVariableChange = (key: string, value: string) => {
     setVariableValues((prev) => ({ ...prev, [key]: value }));
@@ -91,29 +97,54 @@ useEffect(() => {
       return;
     }
 
-    console.log("Sending email with data:", {
-      templateId,
-      segmentId: selectedSegmentId,
-      variables: variableValues,
-    });
+    try {
+      const res = await fetch("/api/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          html: template?.html,
+          variables: variableValues,
+          segmentId: selectedSegmentId,
+          subject: template?.subject,
+          from: template?.from,
+        }),
+      });
 
-    // TODO: Call your backend to trigger Resend send here
-    alert("Email sent (mock)!");
-    onReset();
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Broadcast error:", data);
+        alert("Failed to send email: " + (data.error || "Unknown error"));
+        return;
+      }
+
+      alert("Email sent successfully!");
+      onReset();
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Failed to send email: " + (err as Error).message);
+    }
   };
 
   if (loading || !template) return <p>Loading template...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-gray-900 p-8 rounded-lg shadow-lg text-white">
-      <h2 className="text-2xl font-bold mb-4">{template.name}</h2>
+    <div
+      className={`
+        w-full max-w-4xl bg-gray-100 dark:bg-gray-900
+        border border-gray-300 dark:border-gray-800
+        rounded-2xl p-8 flex flex-col gap-6
+        transition-colors duration-300
+      `}
+    >
+      <h2 className="text-2xl font-semibold text-center">{template.name}</h2>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         {/* Segment selection */}
         <label>
           Audience Segment:
           <select
-            className="w-full p-2 rounded bg-gray-800 text-white"
+            className="w-full p-2 rounded bg-gray-200 dark:bg-gray-800 text-black dark:text-white"
             value={selectedSegmentId || ""}
             onChange={(e) => setSelectedSegmentId(e.target.value)}
             required
@@ -130,12 +161,12 @@ useEffect(() => {
         </label>
 
         {/* Template variables */}
-        {template.variables.map((v) => (
+        {template.variables?.map((v) => (
           <label key={v.id}>
             {v.key}:
             <input
               type="text"
-              className="w-full p-2 rounded bg-gray-800 text-white"
+              className="w-full p-2 rounded bg-gray-200 dark:bg-gray-800 text-black dark:text-white"
               value={variableValues[v.key]}
               onChange={(e) => handleVariableChange(v.key, e.target.value)}
               placeholder={v.fallback_value || ""}
@@ -144,21 +175,12 @@ useEffect(() => {
           </label>
         ))}
 
-        <div className="flex gap-4 mt-4">
-          <button
-            type="button"
-            className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-            onClick={onBack}
-          >
-            Back
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-white text-black font-semibold rounded hover:bg-gray-100"
-          >
-            Send Email
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="px-6 py-3 mt-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
+        >
+          Send Email
+        </button>
       </form>
     </div>
   );
