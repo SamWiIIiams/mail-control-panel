@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { rateLimited } from "@/utils/resendThrottle";
+import { resendLimiter } from "@/utils/resendThrottle";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function GET() {
   try {
-    const { data, error } = await rateLimited(() => resend.segments.list());
+    const { data, error } = await resendLimiter.schedule(() =>
+      resend.segments.list()
+    );
 
     if (error) {
       console.error("Resend error:", error);
@@ -17,6 +19,9 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (err) {
     console.error("Unexpected error fetching segments:", err);
-    return NextResponse.json({ error: "Failed to fetch segments" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch segments" },
+      { status: 500 }
+    );
   }
 }

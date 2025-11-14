@@ -6,43 +6,49 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { html, variables, segmentId, subject, from } = await req.json();
+    const body = await req.json();
+    const { html, variables, segmentId, subject, from } = body;
 
-    // Process template HTML with injected variable values
-    const processedHtml = replaceTemplateVariables(html, variables);
+    // Basic validation
+    if (!html) {
+      return NextResponse.json({ error: "HTML content is required" }, { status: 400 });
+    }
+    if (!segmentId) {
+      return NextResponse.json({ error: "segmentId is required" }, { status: 400 });
+    }
+    if (!subject) {
+      return NextResponse.json({ error: "subject is required" }, { status: 400 });
+    }
+    if (!from) {
+      return NextResponse.json({ error: "'from' field is required" }, { status: 400 });
+    }
 
-    // Create broadcast via Resend API
-    let data, error;
+    // Inject variables into template
+    const processedHtml = replaceTemplateVariables(html, variables ?? {});
 
+    // Resend broadcast creation
     try {
-      const result = await resend.broadcasts.create({
+      const { data, error } = await resend.broadcasts.create({
         from,
         subject,
         segmentId,
         html: processedHtml,
       });
-      data = result.data;
-      error = result.error;
-      console.log("Broadcast response from Resend:", result);
+
+      if (error) {
+        console.error("Resend broadcast error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, data });
     } catch (apiErr) {
       console.error("Broadcast API threw:", apiErr);
-      return NextResponse.json(
-        { error: (apiErr as Error).message },
-        { status: 500 }
-      );
+      const message = apiErr instanceof Error ? apiErr.message : "Unknown broadcast API error";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
-
-    if (error) {
-      console.error("Resend broadcast error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, data });
   } catch (err) {
     console.error("Unexpected error in /api/broadcast:", err);
-    return NextResponse.json(
-      { error: "Failed to send broadcast" },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

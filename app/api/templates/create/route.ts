@@ -1,24 +1,41 @@
 // pages/api/templates.ts
-import { Resend } from 'resend';
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: Request) {
-  const { name, html, variables, subject, from, replyTo, text } = await req.json();
-
   try {
+    const body = await req.json();
+    const { name, html, variables, subject, from, replyTo, text } = body;
+
+    // Basic validation
+    if (!name) {
+      return NextResponse.json({ error: "Template name is required" }, { status: 400 });
+    }
+    if (!html) {
+      return NextResponse.json({ error: "HTML content is required" }, { status: 400 });
+    }
+
     const { data, error } = await resend.templates.create({
       name,
       html,
-      variables,
+      variables: variables ?? {},
       subject,
       from,
       replyTo,
       text,
     });
 
-    return new Response(JSON.stringify({ data, error }), { status: 200 });
+    if (error) {
+      console.error("Resend template creation error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ data });
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), { status: 500 });
+    console.error("Unexpected template creation error:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

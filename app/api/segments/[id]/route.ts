@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { resendLimiter } from "@/utils/resendThrottle";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -8,9 +9,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data, error } = await resend.contacts.list({
-      segmentId: params.id,
-    });
+    const { data, error } = await resendLimiter.schedule(() =>
+      resend.contacts.list({
+        segmentId: params.id,
+      })
+    );
 
     if (error) {
       console.error("Error fetching contacts:", error);
@@ -20,6 +23,9 @@ export async function GET(
     return NextResponse.json(data);
   } catch (err) {
     console.error("Unexpected error fetching contacts:", err);
-    return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch contacts" },
+      { status: 500 }
+    );
   }
 }
