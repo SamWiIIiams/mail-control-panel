@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { resendLimiter } from "@/utils/resendThrottle";
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { getResendApiKey } from "@/lib/config"; // async function to fetch stored API key
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
+    const apiKey = await getResendApiKey();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Resend API key not configured" },
+        { status: 400 }
+      );
+    }
+
+    const resend = new Resend(apiKey);
+
     const { data, error } = await resendLimiter.schedule(() =>
       resend.contacts.list({
         segmentId: params.id,

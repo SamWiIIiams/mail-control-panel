@@ -2,11 +2,20 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { resendLimiter } from "@/utils/resendThrottle";
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { getResendApiKey } from "@/lib/config";
 
 export async function GET() {
   try {
+    const apiKey = await getResendApiKey();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Resend API key not configured" },
+        { status: 400 }
+      );
+    }
+
+    const resend = new Resend(apiKey);
+
     const { data } = await resendLimiter.schedule(() =>
       resend.templates.list()
     );

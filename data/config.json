@@ -1,0 +1,10 @@
+{
+  "setupComplete": true,
+  "admin": {
+    "username": "sam",
+    "passwordHash": "$2b$10$AzElRDu7XfxcNoYQwgTZ/.wPDKRalUZfg24i/EcLbmkuZQOY4J/hq"
+  },
+  "resend": {
+    "apiKeyEncrypted": "FdPSnawdQhCZBbgWVHA1n4fkZ8XkS6N1b0ejxkoRIDoZVRd/aFw="
+  }
+}

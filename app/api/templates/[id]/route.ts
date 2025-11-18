@@ -1,18 +1,28 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { resendLimiter } from "@/utils/resendThrottle";
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { getResendApiKey } from "@/lib/config";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const apiKey = await getResendApiKey();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Resend API key not configured" },
+        { status: 400 }
+      );
+    }
+
+    const resend = new Resend(apiKey);
     const { id } = await params;
 
     const template = await resendLimiter.schedule(() =>
       resend.templates.get(id)
     );
+
     return NextResponse.json(template); // full template including variables
   } catch (error) {
     console.error("Error fetching template:", error);

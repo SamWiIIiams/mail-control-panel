@@ -1,11 +1,19 @@
-// pages/api/templates.ts
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { getResendApiKey } from "@/lib/config";
 
 export async function POST(req: Request) {
   try {
+    const apiKey = await getResendApiKey();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Resend API key not configured" },
+        { status: 400 }
+      );
+    }
+
+    const resend = new Resend(apiKey);
+
     const body = await req.json();
     const { name, html, variables, subject, from, replyTo, text } = body;
 

@@ -10,7 +10,7 @@ export default function DashboardPage() {
     {
       title: "📨 New Email Blast",
       description: "Send a campaign to one of your audience segments using a saved template.",
-      href: "/dashboard/new",
+      href: "/dashboard/new-broadcast",
     },
     {
       title: "🧱 Create Template from HTML",
