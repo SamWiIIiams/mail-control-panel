@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   email-dashboard:
-    container_name: email-dashboard
+    container_name: resend-helper
     build: .
     restart: unless-stopped
     env_file:
