@@ -1,0 +1,24 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Next.js build outputs
+.next
+out
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.template  # allow the template to be included
+
+# Data or secrets
+data
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

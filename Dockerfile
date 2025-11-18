@@ -1,15 +1,31 @@
-# Dockerfile (simple)
-FROM node:20-alpine
+# ────────────────────────────────
+# 1. Build Stage
+# ────────────────────────────────
+FROM node:20-alpine AS builder
 
 WORKDIR /app
+
 COPY package.json package-lock.json ./
-RUN npm ci --production
+RUN npm ci
 
 COPY . .
 
-# ensure data dir exists
-RUN mkdir -p /app/data && chown -R node:node /app/data
+RUN npm run build
 
-USER node
-EXPOSE 3000
-CMD ["npm", "run", "start"]
+# ────────────────────────────────
+# 2. Runtime Stage
+# ────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3333
+
+# Copy standalone Next build
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3333
+
+CMD ["node", "server.js"]

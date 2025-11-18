@@ -1,36 +1,142 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mail Panel (Next.js) - Local Self-Hosted Setup
 
-## Getting Started
+This is a self-hosted mail panel built with Next.js, designed to extend the functionality of the Resend email platform. The application allows:
 
-First, run the development server:
+- Editing template variables directly in raw HTML (not possible in the native Resend template editor).
+- Creating broadcasts using existing templates (a feature not available in Resend's native dashboard).
+- Previewing both template edits and broadcasts before sending.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+It is intended for personal or internal use, running on a local network or VPN. Configuration is stored locally, and it uses a single admin account for access.
+
+---
+
+## Features
+
+- Single admin account with credential-based authentication
+- API key management for Resend
+- Template editing with variable support
+- Broadcast creation from existing templates
+- Preview for templates and broadcasts
+- Fully containerized via Docker and Docker Compose
+- Persistent configuration using a named Docker volume
+
+---
+
+## Requirements
+
+- Docker >= 24  
+- Docker Compose >= 2
+
+---
+
+## Environment Variables
+
+Create a `.env` file at the root of the project:
+
+```
+CONFIG_DIR=/app/data
+NEXTAUTH_SECRET=your-long-random-secret
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Notes:**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `CONFIG_DIR` points to the persistent data directory inside the container. Keep it as-is unless you modify the Docker Compose volume.  
+- `NEXTAUTH_SECRET` should be a long random string for JWT signing.  
+- You can use `.env.template` as a reference for what to include in your `.env`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Docker Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Build and start the container:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker-compose up --build -d
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Check logs (optional):
 
-## Deploy on Vercel
+```bash
+docker-compose logs -f
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Named Volume**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The container uses a named volume `app-data` for persistent storage:
+
+```yaml
+volumes:
+  app-data:/app/data
+```
+
+This ensures your configuration, admin password, and API keys persist across container restarts.
+
+---
+
+## Initial Setup
+
+1. Open your browser to:
+
+```
+http://<your-server-ip>:3000/setup
+```
+
+2. Enter:
+
+- A username  
+- A password  
+- Your Resend API key  
+- A "from" email address for sending emails  
+  > Note: not implemented in the app in any meaningful way... yet
+  
+
+3. Save the setup. You will then be redirected to the sign-in page.
+
+---
+
+## Sign In
+
+1. Open:
+
+```
+http://<your-server-ip>:3000/signin
+```
+
+2. Enter your admin credentials.  
+3. Once logged in, the dashboard, template editor, and settings drawer will be accessible.
+
+---
+
+## Notes
+
+- **Local network only:** This app was not intended to be hosted on a public domain. If you wish to do so I recommend implementing a database and a more robust system for authentication and user/password/api key storage.
+- **No password reset:** This is a single-admin setup; passwords can be updated via the settings drawer after logging in.  
+- **Resend API key:** The key is stored encrypted in the persistent data folder and can be updated from the settings drawer.
+
+---
+
+## Stopping & Removing
+
+```bash
+docker-compose down
+```
+
+The named volume (`app-data`) ensures your configuration persists even if the container is removed.
+
+---
+
+## Optional: Reset Configuration
+
+If you want to reset the admin account or API key, remove the `app-data` volume:
+
+```bash
+docker volume rm <your-project>_app-data
+```
+
+Then restart the container and go through the setup again.
+
+---
+
+## License
+
+MIT
