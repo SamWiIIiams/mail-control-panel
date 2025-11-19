@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { replaceTemplateVariables } from "@/utils/replaceTemplateVariables";
-import { getResendApiKey } from "@/lib/config";
+import { getResendApiKey } from "@/lib/sqlite";
 
 export async function POST(req: Request) {
   try {

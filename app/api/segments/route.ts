@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { resendLimiter } from "@/utils/resendThrottle";
-import { getResendApiKey } from "@/lib/config"; // async function to get user-configured key
+import { getResendApiKey } from "@/lib/sqlite"; // async function to get user-configured key
 
 export async function GET() {
   try {

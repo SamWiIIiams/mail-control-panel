@@ -1,6 +1,6 @@
 // lib/getResendClient.ts
 import { Resend } from "resend";
-import { getResendApiKey } from "./config";
+import { getResendApiKey } from "./sqlite";
 
 export async function getResendClient() {
   const apiKey = await getResendApiKey();

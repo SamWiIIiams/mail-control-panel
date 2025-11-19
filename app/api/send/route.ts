@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { getResendApiKey } from "@/lib/config"; // fetches stored API key
+import { getResendApiKey } from "@/lib/sqlite"; // fetches stored API key
 
 interface SendEmailRequest {
   templateId: string;

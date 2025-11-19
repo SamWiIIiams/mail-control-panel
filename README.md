@@ -34,13 +34,13 @@ It is intended for personal or internal use, running on a local network or VPN. 
 Create a `.env` file at the root of the project:
 
 ```
-CONFIG_DIR=/app/data
+CONFIG_DIR=./data
 NEXTAUTH_SECRET=your-long-random-secret
 ```
 
 **Notes:**
 
-- `CONFIG_DIR` points to the persistent data directory inside the container. Keep it as-is unless you modify the Docker Compose volume.  
+- `CONFIG_DIR` points to the persistent SQLite data directory inside the container. Keep it as-is unless you modify the Docker Compose volume.  
 - `NEXTAUTH_SECRET` should be a long random string for JWT signing.  
 - You can use `.env.template` as a reference for what to include in your `.env`.
 
@@ -66,10 +66,10 @@ The container uses a named volume `app-data` for persistent storage:
 
 ```yaml
 volumes:
-  app-data:/app/data
+  app-data: ./data
 ```
 
-This ensures your configuration, admin password, and API keys persist across container restarts.
+This ensures your configuration, admin password, API keys, and SQLite database persist across container restarts.
 
 ---
 
@@ -109,9 +109,9 @@ http://<your-server-ip>:3000/signin
 
 ## Notes
 
-- **Local network only:** This app was not intended to be hosted on a public domain. If you wish to do so I recommend implementing a database and a more robust system for authentication and user/password/api key storage.
+- **Local network only:** This app is designed for single-admin use and small-scale deployments. Hosting on a public domain is possible but not recommended without adding extra security measures such as HTTPS, strong passwords, and potentially multi-user support.
 - **No password reset:** This is a single-admin setup; passwords can be updated via the settings drawer after logging in.  
-- **Resend API key:** The key is stored encrypted in the persistent data folder and can be updated from the settings drawer.
+- **Resend API key:** The key is securely stored inside the SQLite database located in the persistent `data` folder and can be updated from the settings drawer.
 
 ---
 

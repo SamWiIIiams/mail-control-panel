@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { getResendApiKey } from "@/lib/config";
+import { getResendApiKey } from "@/lib/sqlite";
 
 export async function POST(req: Request) {
   try {

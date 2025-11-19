@@ -11,7 +11,7 @@ services:
       - "3333:3333"
     volumes:
       # Folder where your app stores config.json or equivalent user config
-      - app-data:/app/data
+      - app-data:./appconfig
 
 volumes:
   app-data:

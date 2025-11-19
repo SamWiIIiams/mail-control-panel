@@ -11,7 +11,7 @@
 !.yarn/versions
 
 #data
-/data
+/data/
 
 # testing
 /coverage

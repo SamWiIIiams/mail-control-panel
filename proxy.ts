@@ -1,52 +1,76 @@
-// proxy.ts (root of project)
+// proxy.ts
 import { NextRequest, NextResponse } from "next/server";
-import { readConfig } from "@/lib/config";
+import { isSetupComplete } from "@/lib/sqlite";
 
-// Routes that normally require auth
-const protectedPaths = ["/dashboard", "/api"];
-// Routes to skip protection
-const unprotectedPaths = ["/api/auth", "/api/setup"];
+const LOG = (...args: any[]) => console.log("[proxy]", ...args);
+
+// Routes that never require login
+const alwaysPublic = ["/api/auth", "/api/setup"];
+
+// Routes that require authentication
+const protectedRoutes = ["/dashboard", "/api"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip unprotected routes
-  if (unprotectedPaths.some((p) => pathname.startsWith(p))) {
+  // 1. Always-public routes
+  if (alwaysPublic.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // Only protect specified paths
-  if (!protectedPaths.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
+  const setupComplete = isSetupComplete();
 
-  // Check if setup is complete
-  let setupComplete = false;
-  try {
-    const cfg = await readConfig();
-    setupComplete = cfg?.setupComplete ?? false;
-  } catch (err) {
-    console.error("Failed to read config in proxy", err);
-  }
-
-  // If setup not done, redirect all protected routes to /setup
+  // 2. Before setup complete, allow ONLY `/setup`
   if (!setupComplete) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/setup";
-    return NextResponse.redirect(url);
+    if (!pathname.startsWith("/setup")) {
+      LOG("redirect → /setup (setup incomplete)");
+      const url = req.nextUrl.clone();
+      url.pathname = "/setup";
+      return NextResponse.redirect(url);
+    }
+
+    // Allow setup page
+    LOG("allow: setup page");
+    return NextResponse.next();
   }
 
-  // Setup done → check authentication
-  const token = req.cookies.get("next-auth.session-token")?.value;
-  if (!token) {
+  // 3. Setup is complete. Block access to setup page entirely.
+  if (pathname.startsWith("/setup")) {
+    LOG("redirect → /signin (setup already complete)");
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
     return NextResponse.redirect(url);
   }
 
+  // 4. Signin page: allow it through without requiring token
+  if (pathname.startsWith("/signin")) {
+    LOG("allow: signin page");
+    return NextResponse.next();
+  }
+
+  // 5. Protected routes
+  if (protectedRoutes.some((p) => pathname.startsWith(p))) {
+    const token = req.cookies.get("next-auth.session-token")?.value;
+    LOG("Session token:", token ? "[present]" : "[missing]");
+
+    if (!token) {
+      LOG("redirect → /signin (missing token)");
+      const url = req.nextUrl.clone();
+      url.pathname = "/signin";
+      return NextResponse.redirect(url);
+    }
+
+    LOG("allow: protected route");
+    return NextResponse.next();
+  }
+
+  // 6. Everything else is public
+  LOG("allow: default public route");
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/:path*"],
+  matcher: [
+    "/:path*"
+  ],
 };

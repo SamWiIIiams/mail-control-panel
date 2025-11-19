@@ -1,7 +1,7 @@
+import { readSettings } from "./sqlite";
+import bcrypt from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { readConfig } from "./config";
-import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,16 +14,19 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
-        const config = await readConfig();
-        if (!config?.setupComplete || !config.admin) return null;
+        const row = readSettings();
+        if (!row || !row.setup_complete) return null;
 
-        const { username: adminUsername, passwordHash } = config.admin;
-        if (credentials.username !== adminUsername) return null;
+        if (!row?.password_hash) return null; // or throw error
 
-        const valid = await bcrypt.compare(credentials.password, passwordHash);
+        const valid = await bcrypt.compare(
+          credentials.password,
+          row.password_hash
+        );
+
         if (!valid) return null;
 
-        return { id: "admin", name: adminUsername };
+        return { id: "admin", name: row.username };
       },
     }),
   ],

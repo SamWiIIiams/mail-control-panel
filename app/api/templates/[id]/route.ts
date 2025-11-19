@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { resendLimiter } from "@/utils/resendThrottle";
-import { getResendApiKey } from "@/lib/config";
+import { getResendApiKey } from "@/lib/sqlite";
 
 export async function GET(
   req: Request,

@@ -1,36 +1,31 @@
 // app/api/setup/route.ts
-export const runtime = "nodejs"; // MUST be first
+export const runtime = "nodejs"; // MUST stay first
 
 import { NextRequest, NextResponse } from "next/server";
-import { writeConfig, StoredConfig } from "@/lib/config";
+import { writeSettings } from "@/lib/sqlite";
 import { encryptString } from "@/lib/crypto";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // encrypt the Resend API key
     const encryptedApiKey = body.resendApiKey
       ? await encryptString(body.resendApiKey)
       : undefined;
 
-    const cfg: StoredConfig = {
-      setupComplete: true,
-      admin: {
-        username: body.username,
-        passwordHash: body.password, // ideally hash
-      },
-      resend: {
-        apiKeyEncrypted: encryptedApiKey,
-        fromEmail: body.fromEmail || undefined,
-      },
-    };
-
-    await writeConfig(cfg);
+    await writeSettings({
+      username: body.username,
+      password_hash: body.password,
+      resend_api_key: encryptedApiKey,
+      setup_complete: 1,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Setup error", err);
-    return NextResponse.json({ ok: false, error: "Failed to save config" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Failed to save setup settings" },
+      { status: 500 }
+    );
   }
 }
