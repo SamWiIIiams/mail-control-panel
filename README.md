@@ -78,7 +78,7 @@ This ensures your configuration, admin password, API keys, and SQLite database p
 1. Open your browser to:
 
 ```
-http://<your-server-ip>:3000/setup
+http://<your-server-ip>:3333/setup
 ```
 
 2. Enter:
@@ -99,7 +99,7 @@ http://<your-server-ip>:3000/setup
 1. Open:
 
 ```
-http://<your-server-ip>:3000/signin
+http://<your-server-ip>:3333/signin
 ```
 
 2. Enter your admin credentials.  
