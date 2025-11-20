@@ -5,6 +5,9 @@ import TopBarControls from "@/components/TopBarControls";
 
 export const metadata = {
   title: "Jinjnet Resend Dash",
+  icons: {
+    icon: "/favicon.ico"
+  }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
