@@ -25,49 +25,101 @@ const SettingsDrawer: FC<SettingsDrawerProps> = ({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   // API key field
-  const [apiKey, setApiKey] = useState("");
-  const [apiKeyLoading, setApiKeyLoading] = useState(false);
+  const [apiKey, setApiKey] = useState(""); // the *new* key user enters
   const [apiKeyMessage, setApiKeyMessage] = useState("");
+  const [apiKeyError, setApiKeyError] = useState("");
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
 
   // Handlers
-  const handleSavePassword = async (e: React.FormEvent) => {
+  async function handleSavePassword(e: { preventDefault: () => void }) {
     e.preventDefault();
+    clearPasswordFeedback();
     setPasswordLoading(true);
-    setPasswordMessage("");
 
-    // TODO: implement API call to update password
-    await new Promise((r) => setTimeout(r, 1000));
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      setPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPasswordError(data.error || "Failed to update password.");
+      } else {
+        setPasswordMessage("Password updated successfully.");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err) {
+      setPasswordError("Unexpected error.");
+    }
 
     setPasswordLoading(false);
-    setPasswordMessage("Password updated successfully!");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
+  }
 
   const handleSaveApiKey = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearApiKeyFeedback();
     setApiKeyLoading(true);
-    setApiKeyMessage("");
 
-    // TODO: implement API call to update API key
-    await new Promise((r) => setTimeout(r, 1000));
+    if (!apiKey.trim()) {
+      setApiKeyError("API key cannot be empty.");
+      setApiKeyLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/update-api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: apiKey.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setApiKeyError(data.error || "Failed to update API key.");
+      } else {
+        setApiKeyMessage("API key updated successfully.");
+        setApiKey("");
+      }
+    } catch (err) {
+      setApiKeyError("Unexpected error.");
+    }
 
     setApiKeyLoading(false);
-    setApiKeyMessage("API Key updated successfully!");
-    setApiKey("");
   };
+
+  function clearPasswordFeedback() {
+    setPasswordError("");
+    setPasswordMessage("");
+  }
+
+  function clearApiKeyFeedback() {
+    setApiKeyError("");
+    setApiKeyMessage("");
+  }
 
   return (
     <>
       {/* Backdrop */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
       )}
 
       {/* Drawer */}
@@ -120,26 +172,37 @@ const SettingsDrawer: FC<SettingsDrawerProps> = ({
                   type="password"
                   placeholder="Current password"
                   value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    clearPasswordFeedback();
+                  }}
                   className="p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-black dark:text-white"
                   required
                 />
+
                 <input
                   type="password"
                   placeholder="New password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    clearPasswordFeedback();
+                  }}
                   className="p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-black dark:text-white"
                   required
                 />
                 <input
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder="Confirm password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    clearPasswordFeedback();
+                  }}
                   className="p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-black dark:text-white"
                   required
                 />
+
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
@@ -147,8 +210,15 @@ const SettingsDrawer: FC<SettingsDrawerProps> = ({
                 >
                   {passwordLoading ? "Saving..." : "Save Password"}
                 </button>
+
+                {passwordError && (
+                  <p className="text-sm text-red-600 dark:text-red-500 mt-2">
+                    {passwordError}
+                  </p>
+                )}
+
                 {passwordMessage && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
                     {passwordMessage}
                   </p>
                 )}
@@ -180,7 +250,10 @@ const SettingsDrawer: FC<SettingsDrawerProps> = ({
                   type="text"
                   placeholder="New API Key"
                   value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  onChange={(e) => {
+                    setApiKey(e.target.value);
+                    clearApiKeyFeedback();
+                  }}
                   className="p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-black dark:text-white"
                   required
                 />

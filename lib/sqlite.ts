@@ -57,7 +57,7 @@ export function readSettings(): SettingsRow | null {
     LOG(`no settings row found at ${DATA_DIR}`);
     return null;
   }
-
+  LOG("DEBUG: " + JSON.stringify(row));
   return row as SettingsRow;
 }
 
