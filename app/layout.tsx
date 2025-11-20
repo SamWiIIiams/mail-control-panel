@@ -3,6 +3,10 @@ import "./globals.css";
 import Providers from "./Providers";
 import TopBarControls from "@/components/TopBarControls";
 
+export const metadata = {
+  title: "Jinjnet Resend Dash",
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">

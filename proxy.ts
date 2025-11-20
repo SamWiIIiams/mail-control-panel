@@ -8,7 +8,7 @@ const LOG = (...args: any[]) => console.log("[proxy]", ...args);
 const alwaysPublic = ["/api/auth", "/api/setup", "/_next/"];
 
 // Routes that require authentication
-const protectedRoutes = ["/dashboard", "/api"];
+const protectedRoutes = ["/", "/dashboard", "/api"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -70,7 +70,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/:path*"
-  ],
+  matcher: ["/:path*"],
 };
