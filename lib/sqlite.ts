@@ -54,7 +54,7 @@ export function readSettings(): SettingsRow | null {
   const row = db.prepare("SELECT * FROM settings WHERE id = 1").get();
 
   if (!row) {
-    LOG("no settings row found");
+    LOG(`no settings row found at ${DATA_DIR}`);
     return null;
   }
 

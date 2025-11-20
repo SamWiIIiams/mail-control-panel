@@ -5,7 +5,7 @@ import { isSetupComplete } from "@/lib/sqlite";
 const LOG = (...args: any[]) => console.log("[proxy]", ...args);
 
 // Routes that never require login
-const alwaysPublic = ["/api/auth", "/api/setup"];
+const alwaysPublic = ["/api/auth", "/api/setup", "/_next/"];
 
 // Routes that require authentication
 const protectedRoutes = ["/dashboard", "/api"];

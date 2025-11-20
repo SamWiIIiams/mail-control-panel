@@ -34,7 +34,7 @@ It is intended for personal or internal use, running on a local network or VPN. 
 Create a `.env` file at the root of the project:
 
 ```
-CONFIG_DIR=./data
+CONFIG_DIR=/app/data
 NEXTAUTH_SECRET=your-long-random-secret
 ```
 

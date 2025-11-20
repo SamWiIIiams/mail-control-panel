@@ -1,7 +1,7 @@
 # ────────────────────────────────
 # 1. Build Stage
 # ────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN npm run build
 # ────────────────────────────────
 # 2. Runtime Stage
 # ────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -23,7 +23,7 @@ ENV PORT=3333
 
 # Copy standalone Next build
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next/static ./.next
 COPY --from=builder /app/public ./public
 
 EXPOSE 3333

@@ -10,8 +10,7 @@ services:
     ports:
       - "3333:3333"
     volumes:
-      # Folder where your app stores config.json or equivalent user config
-      - app-data:./appconfig
+      - app-data:/app/data
 
 volumes:
   app-data:
