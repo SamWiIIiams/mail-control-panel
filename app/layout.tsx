@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
+import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./Providers";
 import TopBarControls from "@/components/TopBarControls";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Jinjnet Resend Dash",
+  description: "By Sam Williams",
   icons: {
     icon: "/favicon.ico"
   }
